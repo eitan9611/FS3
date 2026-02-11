@@ -2,10 +2,11 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>מערכת ניהול אנשי קשר - SPA</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style/main.css">
 </head>
-<body>
+<body class="protected">
 
     <div id="app-root"></div>
 
@@ -38,12 +39,12 @@
         <div class="page">
             <header>
                 <h2>אנשי הקשר שלי</h2>
-                <button onclick="router.navigate('login')">התנתק</button>
+                <button onclick="router.logout()">התנתק</button>
             </header>
             
             <div class="actions">
                 <input type="text" id="search-contact" placeholder="חיפוש איש קשר...">
-                <button onclick="console.log('Open Add Modal')">הוסף איש קשר +</button>
+                <button onclick="router.showAddContactModal()">הוסף איש קשר +</button>
             </div>
 
             <table id="contacts-table">
@@ -60,6 +61,27 @@
         </div>
     </template>
 
+    <template id="template-contact-row">
+        <tr>
+            <td class="contact-name"></td>
+            <td class="contact-phone"></td>
+            <td>
+                <button class="btn-edit">ערוך</button>
+                <button class="btn-delete">מחק</button>
+            </td>
+        </tr>
+    </template>
+
+    <script src="js/db.js"></script>
+    
+    <script src="js/network.js"></script>
+    
+    <script src="js/Servers/serverUser.js"></script>
+    <script src="js/Servers/serverContact.js"></script>
+    
+    <script src="js/fajax.js"></script>
+    
     <script src="js/app.js"></script>
+
 </body>
 </html>

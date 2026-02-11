@@ -1,24 +1,26 @@
-// app.js - לוגיקת הלקוח וה-SPA
+/**
+ * app.js - לוגיקת הלקוח וניהול ה-SPA
+ */
 
 const router = {
-    // פונקציית הניתוב
+    // מזהה הטיימר הנוכחי למניעת כפילויות במקרה של ניסיונות חוזרים
+    activeTimeout: null,
+
+    /**
+     * ניווט בין עמודים בארכיטקטורת SPA
+     */
     navigate: function(pageId) {
         const root = document.getElementById('app-root');
         const template = document.getElementById(`template-${pageId}`);
         
-        if (!template) {
-            console.error(`Page ${pageId} not found`);
-            return;
-        }
+        if (!template) return;
 
-        // ניקוי העמוד הנוכחי
+        // ניקוי העמוד והזרקת התבנית החדשה
         root.innerHTML = '';
-
-        // שכפול התבנית והזרקתה
         const clone = template.content.cloneNode(true);
         root.appendChild(clone);
 
-        // אתחול אירועים ספציפיים לעמוד שנטען
+        // אתחול אירועים לעמוד שנטען
         this.initPageEvents(pageId);
     },
     
@@ -139,5 +141,5 @@ const router = {
     }
 };
 
-// טעינת עמוד הכניסה כברירת מחדל
+// טעינת עמוד הכניסה עם פתיחת האפליקציה
 window.onload = () => router.navigate('login');
