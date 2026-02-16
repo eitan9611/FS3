@@ -1,0 +1,137 @@
+/* הגדרות כלליות וצבעים */
+:root {
+    --primary-color: #4a90e2;
+    --secondary-color: #f5f7fa;
+    --accent-color: #2ecc71;
+    --danger-color: #e74c3c;
+    --text-color: #2c3e50;
+    --border-radius: 8px;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* מיכל האפליקציה הראשי */
+#app-root {
+    width: 100%;
+    max-width: 800px;
+    padding: 20px;
+}
+
+/* עיצוב ה"דפים" (Pages) */
+.page {
+    background: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    animation: fadeIn 0.3s ease-in;
+}
+
+h2 {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+    margin-top: 0;
+}
+
+/* טפסים וכפתורים */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+input {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+/* כפתור ראשי (הוספה/התחברות) */
+button[type="submit"], .actions button {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+button:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* מצב חסום (Race Condition Protection) */
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* עיצוב הטבלה */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 15px;
+    text-align: right;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background-color: #f8f9fa;
+    color: #666;
+}
+
+tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* כפתורי פעולות בטבלה */
+.btn-edit { background-color: var(--accent-color); color: white; margin-left: 5px; }
+.btn-delete { background-color: var(--danger-color); color: white; }
+
+/* חיפוש ופעולות דאשבורד */
+.actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+#search-contact {
+    flex-grow: 1;
+}
+
+/* אנימציה קלה למעבר בין דפים */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
