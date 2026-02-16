@@ -8,6 +8,19 @@
 </head>
 <body class="protected">
 
+    <template id="template-add-contact">
+    <div class="page">
+        <h2>הוספת איש קשר חדש</h2>
+        <form id="add-contact-form">
+            <input type="text" id="contact-name" placeholder="שם מלא" required>
+            <input type="tel" id="contact-phone" placeholder="מספר טלפון" required>
+            <button type="submit">שמור איש קשר</button>
+            <button type="button" onclick="router.navigate('dashboard')">ביטול</button>
+        </form>
+    </div>
+    </template>
+
+
     <div id="app-root"></div>
 
     <template id="template-login">
@@ -34,6 +47,11 @@
             <p>כבר יש לך חשבון? <a href="#" onclick="router.navigate('login')">חזור לכניסה</a></p>
         </div>
     </template>
+
+
+
+
+
 
     <template id="template-dashboard">
         <div class="page">

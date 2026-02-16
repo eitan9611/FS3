@@ -3,7 +3,7 @@
  */
 const Network = {
     // הגדרת הסתברות להשמטת הודעה (למשל 20%)
-    DROP_PROBABILITY: 0.2,
+    DROP_PROBABILITY: 0.0000000000000001,
 
     /**
      * פונקציית השליחה המרכזית
@@ -12,7 +12,7 @@ const Network = {
      */
     send: function(request) {
         return new Promise((resolve, reject) => {
-            console.log(`%c[Network] שולח בקשה ל: ${request.url}`, "color: blue");
+            console.log(`%c[Network] שולח בקשה ל: ${request.url}`, "color: pink");
 
             // 1. הדמיית השהיה אקראית (1-3 שניות)
             const delay = Math.floor(Math.random() * 2000) + 1000;

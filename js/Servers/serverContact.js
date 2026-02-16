@@ -11,7 +11,7 @@ const DataServer = {
         }
         // ניתוח ה-URL וניתוב לפעולה המתאימה (REST)
         if (url === '/contacts') {
-            if (method === 'GET') return this.getAll();
+            if (method === 'GET') return this.getAll(data.owner);
             if (method === 'POST') return this.add(data);
         }
         
@@ -30,9 +30,10 @@ const DataServer = {
         return !!token;
     },
 
-    getAll: function() {
+    getAll: function(username) {
         const data = DB.findAll(DB_DATA_KEY);
-        return { status: 200, data: data };
+        const userContacts = data.filter(c => c.owner === username);
+        return { status: 200, data: userContacts };
     },
 
     add: function(contact) {
