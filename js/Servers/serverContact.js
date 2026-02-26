@@ -1,7 +1,7 @@
 /**
  * DataServer - אחראי על ניהול אנשי הקשר
  */
-const DataServer = {
+const ContactServer = {
     handleRequest: function(request) {
         const { method, url, data, token } = request;
 

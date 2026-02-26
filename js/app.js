@@ -1,14 +1,12 @@
 /**
- * app.js - לוגיקת הלקוח וניהול ה-SPA
+ * app.js - לוגיקת הלקוח וניהול ה-SPA מבוסס Callbacks
  */
+
 
 const router = {
     allContacts: [],
-    lastLoadRequestId: 0, // מונה בקשות לטעינת נתונים
+    lastLoadRequestId: 0, 
 
-    /**
-     * ניווט בין עמודים בארכיטקטורת SPA
-     */
     navigate: function(pageId, params = null) {
         const root = document.getElementById('app-root');
         const template = document.getElementById(`template-${pageId}`);
@@ -19,14 +17,11 @@ const router = {
         const clone = template.content.cloneNode(true);
         root.appendChild(clone);
 
-        // אתחול אירועים לעמוד שנטען עם פרמטרים במידה ויש (כמו במקרה של עריכה)
         this.initPageEvents(pageId, params);
     },
 
-    // בתוך אובייקט ה-router ב-app.js
-
-    sendWithRetry: async function(method, url, data = null, token = null) {
-        // פתרון 3: חסימת ממשק המשתמש
+    // פונקציית עזר לתקשורת המבוססת על Callbacks ואירועים
+    sendWithRetry: function(method, url, data = null, token = null, callback) {
         const submitButtons = document.querySelectorAll('button[type="submit"], button[onclick*="delete"], button[onclick*="edit"]');
         submitButtons.forEach(btn => btn.disabled = true); // נעילת כפתורים
 
@@ -34,35 +29,48 @@ const router = {
         fajax.open(method, url);
         if (token) fajax.setRequestHeader('Authorization', token);
 
-        try {
-            const response = await fajax.send(data);
-            return response; 
-        } catch (error) {
-            if (error.status === 500) {
+        // הגדרת מה יקרה כשהבקשה מצליחה לחזור (גם אם חזרה עם סטטוס שגיאה מהשרת)
+        fajax.onload = () => {
+            submitButtons.forEach(btn => btn.disabled = false);
+            const response = JSON.parse(fajax.responseText);
+            callback(null, response);
+        };
+
+        // הגדרת מה יקרה אם הבקשה נופלת ברשת
+        fajax.onerror = () => {
+            submitButtons.forEach(btn => btn.disabled = false);
+            const errorResponse = JSON.parse(fajax.responseText);
+            
+            if (fajax.status === 500) {
                 const retry = confirm("הבקשה נפלה בדרך לרשת, תרצה לשלוח שוב את הבקשה?");
                 if (retry) {
-                    return this.sendWithRetry(method, url, data, token); 
+                    // קריאה רקורסיבית - מנסים שוב עם אותו ה-callback
+                    this.sendWithRetry(method, url, data, token, callback);
+                } else {
+                    callback(errorResponse, null);
                 }
+            } else {
+                callback(errorResponse, null);
             }
-            throw error;
-        } finally {
-            // שחרור הנעילה בסיום (בין אם הצליח ובין אם נכשל)
-            submitButtons.forEach(btn => btn.disabled = false);
-        }
+        };
+
+        fajax.send(data);
     },
     
     initPageEvents: function(pageId, params) {
         
         // --- עמוד כניסה ---
         if (pageId === 'login') {
-            document.getElementById('login-form').onsubmit = async (e) => {
+            document.getElementById('login-form').onsubmit = (e) => {
                 e.preventDefault();
                 const username = document.getElementById('login-username').value;
                 const password = document.getElementById('login-password').value;
 
-                try {
-                    // שימוש ב-sendWithRetry במקום fajax ישיר
-                    const response = await this.sendWithRetry('POST', '/login', { username, password }); 
+                this.sendWithRetry('POST', '/login', { username, password }, null, (error, response) => {
+                    if (error) {
+                        alert("תקלה: " + (error.message || "לא ניתן להתחבר לשרת"));
+                        return;
+                    }
                     if (response.status === 200) {
                         sessionStorage.setItem('token', response.data.token);
                         sessionStorage.setItem('username', response.data.username);
@@ -70,15 +78,14 @@ const router = {
                     } else {
                         alert("שגיאה: " + response.message);
                     }
-                } catch (error) {
-                    alert("תקלה: " + (error.message || "לא ניתן להתחבר לשרת"));
-                }
+                });
             };
         }
         
         // --- עמוד הרשמה ---
+        // --- עמוד הרשמה ---
         if (pageId === 'register') {
-            document.getElementById('register-form').onsubmit = async (e) => {
+            document.getElementById('register-form').onsubmit = (e) => {
                 e.preventDefault();
                 const userData = {
                     username: document.getElementById('reg-username').value,
@@ -86,20 +93,25 @@ const router = {
                     email: document.getElementById('reg-email').value
                 };
 
-                try {
-                    // שימוש ב-sendWithRetry
-                    const response = await this.sendWithRetry('POST', '/register', userData);
+                this.sendWithRetry('POST', '/register', userData, null, (error, response) => {
+                    // שגיאת רשת (למשל, ההודעה אבדה בדרך)
+                    if (error) {
+                        alert("שגיאת רשת: " + (error.message || "תקשורת נכשלה"));
+                        return;
+                    }
+                    
+                    // התקבלה תגובה מסודרת מהשרת - בודקים את הסטטוס
                     if (response.status === 201) {
                         alert("הרישום בוצע בהצלחה!");
                         this.navigate('login');
-                    }
-                } catch (error) {
-                    if (error.status === 409) {
-                        alert("שגיאה: " + error.message);
+                    } else if (response.status === 409) {
+                        // כאן אנחנו תופסים את המקרה שהשם או האימייל כבר קיימים!
+                        alert(response.message); // יקפיץ את ההודעה המדויקת מהשרת
                     } else {
-                        alert("שגיאה: " + (error.message || "תקשורת נכשלה"));
+                        // שגיאות כלליות אחרות מהשרת (למשל חסרים שדות)
+                        alert("שגיאה: " + response.message);
                     }
-                }
+                });
             };
         }
 
@@ -123,28 +135,28 @@ const router = {
                 document.getElementById('contact-phone').value = params.phone;
             }
 
-            form.onsubmit = async (e) => {
+            form.onsubmit = (e) => {
                 e.preventDefault();
                 const contactData = {
                     name: document.getElementById('contact-name').value,
                     phone: document.getElementById('contact-phone').value,
-                    owner: sessionStorage.getItem('username') // הוספת שיוך למשתמש 
+                    owner: sessionStorage.getItem('username') 
                 };
 
                 const method = params ? 'PUT' : 'POST';
                 const url = params ? `/contacts/${params.id}` : '/contacts';
                 const token = sessionStorage.getItem('token');
 
-                try {
-                    // שימוש ב-sendWithRetry לביצוע הוספה/עדכון
-                    const response = await this.sendWithRetry(method, url, contactData, token);
+                this.sendWithRetry(method, url, contactData, token, (error, response) => {
+                    if (error) {
+                        alert("שגיאה בתקשורת: " + error.message);
+                        return;
+                    }
                     if (response.status === 200 || response.status === 201) {
                         alert(params ? "עודכן בהצלחה!" : "נוסף בהצלחה!");
                         this.navigate('dashboard');
                     }
-                } catch (error) {
-                    alert("שגיאה בתקשורת: " + error.message);
-                }
+                });
             };
         }
     },
@@ -158,30 +170,30 @@ const router = {
         this.navigate('login');
     },
 
-    loadContacts: async function() {
+    loadContacts: function() {
         const token = sessionStorage.getItem('token');
         const username = sessionStorage.getItem('username');
         const data = { owner: username };
 
-        // פתרון 2: שמירת מזהה הבקשה הנוכחית
         const currentId = ++this.lastLoadRequestId;
 
-        try {
-            const response = await this.sendWithRetry('GET', '/contacts', data, token);
-            
-            // בדיקה אם זו עדיין הבקשה הרלוונטית ביותר
+        this.sendWithRetry('GET', '/contacts', data, token, (error, response) => {
+            // התעלמות מתגובה ישנה שהגיעה באיחור
             if (currentId !== this.lastLoadRequestId) {
                 console.warn("התעלמות מתגובה ישנה שהגיעה באיחור");
                 return;
             }
 
-            if (response.status === 200) {
+            if (error) {
+                console.error("נכשלה טעינת אנשי הקשר:", error);
+                return;
+            }
+
+            if (response && response.status === 200) {
                 this.allContacts = response.data;
                 this.renderContacts(response.data);
             }
-        } catch (error) {
-            console.error("נכשלה טעינת אנשי הקשר:", error);
-        }
+        });
     },
 
     editContact: function(id) {
@@ -191,30 +203,28 @@ const router = {
         }
     },
 
-    deleteContact: async function(id) {
+    deleteContact: function(id) {
         if (!confirm("האם אתה בטוח שברצונך למחוק?")) return;
 
         const token = sessionStorage.getItem('token');
 
-        try {
-            // מחיקה עם מנגנון Retry
-            const response = await this.sendWithRetry('DELETE', `/contacts/${id}`, null, token);
-            if (response.status === 200) {
+        this.sendWithRetry('DELETE', `/contacts/${id}`, null, token, (error, response) => {
+            if (error) {
+                alert("מחיקה נכשלה עקב תקלת תקשורת.");
+                return;
+            }
+            if (response && response.status === 200) {
                 alert("נמחק בהצלחה");
                 this.loadContacts();
             }
-        } catch (error) {
-            alert("מחיקה נכשלה עקב תקלת תקשורת.");
-        }
+        });
     },
 
     handleSearch: function(query) {
-        const currentSearchId = ++this.lastLoadRequestId; // שימוש באותו מונה
-        
+        // בגלל שזה חיפוש מקומי במערך שכבר נטען, אין פה פניית רשת
         const filtered = this.allContacts.filter(c => 
             c.name.toLowerCase().includes(query.toLowerCase()) || c.phone.includes(query)
         );
-        
         this.renderContacts(filtered);
     },
 

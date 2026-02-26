@@ -1,7 +1,7 @@
 /**
  * AuthServer - אחראי על לוגיקת רישום וכניסה
  */
-const AuthServer = {
+const UserServer = {
     handleRequest: function(request) {
         const { method, url, data } = request;
 
